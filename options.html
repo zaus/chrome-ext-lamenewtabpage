@@ -2,10 +2,31 @@
 
 <div class="c">
 	<div class="f">
-		<label>Ignore Chrome Urls?<input type="checkbox" id="ignoreChrome" /></label>
+		<label>Url to Use: <input type="text" id="url" /></label>
 	</div>
 	<div class="f">
-		<label>Include title when copying?<input type="checkbox" id="includeTitle" /></label>
+		<label for="ex">Common Examples:</label>
+		<select id="ex">
+			<optgroup label="Chrome">
+				<option value="chrome://apps">Apps</option>
+				<option value="chrome://extensions">Extensions</option>
+				<option value="chrome://history">History</option>
+				<option value="chrome://bookmarks">Bookmarks</option>
+				<option value="chrome://downloads">Downloads</option>
+				<option value="chrome://settings">Settings</option>
+				<option value="chrome://about">About</option>
+			</optgroup>
+			<optgroup label="Popular">
+				<option value="https://plus.google.com">Google+</option>
+				<option value="https://facebook.com">Facebook</option>
+				<option value="https://bing.com">Bing</option>
+				<option value="https://twitter.com">Twitter</option>
+				<option value="http://wikipedia.org">Wikipedia</option>
+				<option value="http://digg.com">Digg</option>
+				<option value="https://delicious.com">Delicious</option>
+				<option value="http://slashdot.org">Slashdot</option>
+			</optgroup>
+		</select>
 	</div>
 	<div class="f">
 		<label>Debug Mode<input type="checkbox" id="debugMode" /></label>
@@ -13,7 +34,10 @@
 </div>
 <div class="c">
 	<button id="save">Save Options</button>
+	<!--
 	<a href="popup.html">&lArr; Back</a>
+	-->
 </div>
 
 <script id="P" src="P.js"></script>
+<script>MYSELF.begin();</script>

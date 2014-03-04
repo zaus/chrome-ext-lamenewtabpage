@@ -1,6 +1,19 @@
-﻿(function (T, $) {
-	var P = {};
+;MYSELF = (function (storage, $) {
+	var 
+		// the "plugin"
+		P = {},
+		// namespace
+		N = 'oldnewtabpage_v1',
+		// localization
+		L = {
+			saved_settings: 'Settings Saved'
+		},
+		// the current options
+		options
+	;
 
+	// #region -------- utilities ----------
+	
 	P.log = function () {
 		if (!options.debugMode || !options.debugMode.val) return;
 
@@ -14,64 +27,70 @@
 		}
 	}
 
-	var options = {}
-		, $links = $('#links')[0]
-
-	P.get = function () {
-		T.query({ currentWindow: true }, function (ts) {
-			var r = [];
-			ts.forEach(function (t, i) {
-				// ignore chromespecials?
-				if (!options.ignoreChrome.val || t.url.indexOf('chrome') !== 0) {
-					if (options.includeTitle.val) r.push(t.title);
-					r.push(options.includeTitle.val ? "\t" + t.url : t.url);
-				}
-			});
-
-			$links.value = r.join("\n");
-			$links.focus();
-			$links.select();
-		});
-
-		return false;
+	/**
+	 * Serialize
+	 */
+	P.ser = function(data) {
+	
+		return JSON.stringify(data);
+	};
+	/**
+	 * Deserialize
+	 */
+	P.deser = function(data) {
+		return JSON.parse(data);
 	};
 
-	P.clear = function () {
-		$links.value = '';
+	// #endregion -------- utilities ----------
+
+	
+	/**
+	 * On example dropdown change
+	 */
+	P.ex = function(e) {
+		P.log(e, e.target.value);
+		
+		$('#url')[0].value = e.target.value;
 	};
 
-	P.set = function () {
-		var urls = $links.value.split('\n').map(function(v) { return v.trim(); });
-		urls.forEach(function (v) {
-
-			// ignore non-links
-			P.log('checking link', v);
-
-			if (v.indexOf('http') === 0 || v.indexOf('//') !== -1) {
-				T.create({ url: v }, function () { P.log.apply(console, arguments); });
-			}
-		});
-	};
-
-
+	
+	
+	/**
+	 * Save options
+	 */
 	P.save = function () {
 		options = [].reduce.call($('.f input'), function (o, v) {
-			o[v.id] = { val: v.checked, type: v.type };
+			o[v.id] = { type: v.type };
+			switch(o.type) {
+				case 'checkbox': o.val = v.checked; break;
+				default: o.val = v.value; break;
+			}
 			return o;
 		}, {});
-		P.log('saved multitabio options', options);
-		localStorage['multitabio'] = JSON.stringify(options);
+		
+		// must turn into key/value pair
+		var d = {};
+		d[N] = P.ser(options);
+		
+		storage.set(d, function() {
+			alert(L.saved_settings); // TODO: localize
+			P.log(N, 'saved options', options);		
+		});
+		
 	};
 
+	
+	/**
+	 * Load options
+	 */
 	P.load = function () {
-
+		storage.get(N, P._load);
+	};
+	P._load = function(options) {
 		// default options
-		if (!localStorage['multitabio']) {
-			if($links) $links.focus();
-			localStorage['multitabio'] = JSON.stringify({ ignoreChrome: { type: "checkbox", val: true }, includeTitle: { type: "checkbox", val: true }, debugMode: { type: "checkbox", val: false } });
-		}
-
-		options = JSON.parse(localStorage['multitabio']);
+		
+		if (!options) {}
+		else options = P.deser(options);
 		
 		for (var k in options) {
 			if (options.hasOwnProperty(k)) {
@@ -79,8 +98,10 @@
 
 				var $o = $('#' + k)[0];
 				if ($o) {
-					if (v.type == 'checkbox') $o.checked = v.val;
-					else $o.value = v.val;
+					switch(v.type) {
+						case 'checkbox': $o.checked = v.val; break;
+						default: $o.value = v.val; break;
+					}
 				}
 			}
 		}
@@ -91,15 +112,36 @@
 			$('#P')[0].parentNode.appendChild(e);
 		}
 
-		P.log('loaded multitabio options');
-
-		P.get();
+		P.log(N, 'loaded options');
 	}
 
-	document.addEventListener('DOMContentLoaded', P.load);
-	['get', 'set', 'clear', 'save'].forEach(function (a) {
-		var $o = $('#' + a)[0];
-		if($o) $o.addEventListener('click', P[a]);
-	});
+	P.options_init = function() {
+		document.addEventListener('DOMContentLoaded', P.load);
+		// buttons
+		['save'].forEach(function (a) {
+			var $o = $('#' + a)[0];
+			if($o) $o.addEventListener('click', P[a]);
+		});
+		// dropdowns
+		['ex'].forEach(function (a) {
+			var $o = $('#' + a)[0];
+			if($o) $o.addEventListener('onchange', P[a]);
+		});
+	};
+	
+	P.redirect_init = function() {
+		storage.get(N, function(data) {
+			if(!data) return;
+			
+			options = P.deser(data);
+			
+			window.location.href = options.url;
+		})
+	};
+	
+	return {
+		options: P.options_init,
+		redirect: P.redirect_init
+	};
 
-})(chrome.tabs, function (s) { return document.querySelectorAll(s); });
+})(chrome.storage.sync, function (s) { return document.querySelectorAll(s); });

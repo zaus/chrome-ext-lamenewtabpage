@@ -1,18 +1,16 @@
 {
 	"manifest_version": 2,
-	"name": "Multitab I/O",
-	"version": "0.1.4",
-	"description": "Export a list of URLs from open tabs, or bulk-open a list of pasted URLs.",
+	"name": "Oldnewtabpage",
+	"version": "0.1",
+	"description": "Replace the New Tab Page with your choice.",
 	"icons": {
 		"128": "icon96.png",
 		"48":  "icon48.png"
 	},
-	"browser_action": {
-		"default_icon": "icon96.png",
-		"default_name": "Multitab I/O",
-		"default_title": "Multitab I/O",
-		"default_popup": "popup.html"
+	"chrome_url_overrides": {
+		"newtab": "redirect.html"
 	},
 	"options_page": "options.html",
-	"permissions": [ "tabs" ]
+	"permissions": [ "storage" ],
+	"incognito": "split"
 }
