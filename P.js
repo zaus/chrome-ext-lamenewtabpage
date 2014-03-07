@@ -15,10 +15,10 @@
 	// #region -------- utilities ----------
 	
 	P.log = function () {
-		if (!options.debugMode || !options.debugMode.val) return;
-
 		var args = Array.prototype.slice.call(arguments, 0);
 		console.log.apply(console, args);
+
+		if (!options || !options.debugMode || !options.debugMode.val) return;
 
 		var $d = $('#debug')[0];
 		if ($d) {
@@ -48,7 +48,7 @@
 	 * On example dropdown change
 	 */
 	P.ex = function(e) {
-		P.log(e, e.target.value);
+		// P.log(e, e.target.value);
 		
 		$('#url')[0].value = e.target.value;
 	};
@@ -59,24 +59,24 @@
 	 * Save options
 	 */
 	P.save = function () {
-		options = [].reduce.call($('.f input'), function (o, v) {
+		options = [].reduce.call($('.f [id]'), function (o, v) {
 			o[v.id] = { type: v.type };
 			switch(o.type) {
-				case 'checkbox': o.val = v.checked; break;
-				default: o.val = v.value; break;
+				case 'checkbox': o[v.id].val = v.checked; break;
+				default: o[v.id].val = v.value; break;
 			}
 			return o;
 		}, {});
 		
-		// must turn into key/value pair
-		var d = {};
-		d[N] = P.ser(options);
-		
-		storage.set(d, function() {
+		storage.set(options, function() {
 			alert(L.saved_settings); // TODO: localize
 			P.log(N, 'saved options', options);		
 		});
 		
+	};
+	
+	P.reset = function() {
+		storage.clear(function() { P.log(N, 'cleared settings'); });
 	};
 
 	
@@ -84,13 +84,19 @@
 	 * Load options
 	 */
 	P.load = function () {
-		storage.get(N, P._load);
+		storage.get(null, P._load);
+		P.log(N, chrome.runtime.lastError);
 	};
 	P._load = function(options) {
+		P.log(N, 'loaded options', options)
 		// default options
-		
-		if (!options) {}
-		else options = P.deser(options);
+		if ('undefined' === typeof options) {
+			options = {
+				url: { type: 'text', val: '' },
+				ex: { type: 'select-one', val: '' },
+				debugMode: { type: 'checkbox', val: false }
+			}
+		}
 		
 		for (var k in options) {
 			if (options.hasOwnProperty(k)) {
@@ -118,24 +124,40 @@
 	P.options_init = function() {
 		document.addEventListener('DOMContentLoaded', P.load);
 		// buttons
-		['save'].forEach(function (a) {
+		['save', 'reset'].forEach(function (a) {
 			var $o = $('#' + a)[0];
 			if($o) $o.addEventListener('click', P[a]);
 		});
 		// dropdowns
 		['ex'].forEach(function (a) {
 			var $o = $('#' + a)[0];
-			if($o) $o.addEventListener('onchange', P[a]);
+			if($o) $o.addEventListener('change', P[a]);
 		});
 	};
 	
+	var isnewtab = function(url) {
+		return (/chrome(-internal)?:\/\/newtab[\/]?/).test(url);
+	};
+	
 	P.redirect_init = function() {
-		storage.get(N, function(data) {
-			if(!data) return;
+		storage.get('url', function(data) {
+			if('undefined' === typeof data || !data.url) return;
+			var url = data.url.val;
 			
-			options = P.deser(data);
-			
-			window.location.href = options.url;
+			// regular link vs chrome
+			if (/^http[s]?:/i.test(url)) {
+				document.location.href = url;
+			} else {
+				if (isnewtab(url)) { url = ""; }
+				chrome.tabs.getCurrent(function (t) {
+					if (!t.url || isnewtab(t.url)) {
+						chrome.tabs.update(t.id, {
+							"url": url || chrome.extension.getURL("options.html"),
+							"selected": true
+						});
+					}
+				});
+			}
 		})
 	};
 	

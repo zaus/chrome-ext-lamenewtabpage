@@ -7,6 +7,7 @@
 	<div class="f">
 		<label for="ex">Common Examples:</label>
 		<select id="ex">
+			<option value="">(Select One)</option>
 			<optgroup label="Chrome">
 				<option value="chrome://apps">Apps</option>
 				<option value="chrome://extensions">Extensions</option>
@@ -34,10 +35,11 @@
 </div>
 <div class="c">
 	<button id="save">Save Options</button>
+	<button id="reset">Clear Options</button>
 	<!--
 	<a href="popup.html">&lArr; Back</a>
 	-->
 </div>
 
 <script id="P" src="P.js"></script>
-<script>MYSELF.begin();</script>
+<script src="options.js"></script>
