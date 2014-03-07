@@ -61,7 +61,7 @@
 	P.save = function () {
 		options = [].reduce.call($('.f [id]'), function (o, v) {
 			o[v.id] = { type: v.type };
-			switch(o.type) {
+			switch(o[v.id].type) {
 				case 'checkbox': o[v.id].val = v.checked; break;
 				default: o[v.id].val = v.value; break;
 			}
@@ -69,7 +69,7 @@
 		}, {});
 		
 		storage.set(options, function() {
-			alert(L.saved_settings); // TODO: localize
+			alert(L.saved_settings);
 			P.log(N, 'saved options', options);		
 		});
 		
@@ -148,7 +148,7 @@
 			if (/^http[s]?:/i.test(url)) {
 				document.location.href = url;
 			} else {
-				if (isnewtab(url)) { url = ""; }
+				if (isnewtab(url)) { url = false; } // gotta prevent endless loop
 				chrome.tabs.getCurrent(function (t) {
 					if (!t.url || isnewtab(t.url)) {
 						chrome.tabs.update(t.id, {
