@@ -1,4 +1,4 @@
-Oldnewtabpage
+Lamenewtabpage
 ===================
 
 Based on [NewTab-Redirect](https://github.com/jimschubert/NewTab-Redirect), yet another replacement for the new tab page.

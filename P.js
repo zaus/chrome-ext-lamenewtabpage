@@ -94,7 +94,8 @@
 			options = {
 				url: { type: 'text', val: '' },
 				ex: { type: 'select-one', val: '' },
-				debugMode: { type: 'checkbox', val: false }
+				debugMode: { type: 'checkbox', val: false },
+				delay: 0
 			}
 		}
 		
@@ -138,12 +139,16 @@
 	var isnewtab = function(url) {
 		return (/chrome(-internal)?:\/\/newtab[\/]?/).test(url);
 	};
-	
-	P.redirect_init = function() {
-		storage.get('url', function(data) {
-			if('undefined' === typeof data || !data.url) return;
+	var getUrlCallback = function(data) {
+		if('undefined' === typeof data || !data.url) return;
+		
+		var delay = data.delay.val || 0;
+		$('#delay')[0].innerHTML = "" + delay;
+		
+		// introduce optional delay
+		setTimeout(function(){
 			var url = data.url.val;
-			
+
 			// regular link vs chrome
 			if (/^http[s]?:/i.test(url)) {
 				document.location.href = url;
@@ -158,7 +163,13 @@
 					}
 				});
 			}
-		})
+			
+		}, delay);
+	};
+	
+	
+	P.redirect_init = function() {
+		storage.get(['url', 'delay'], getUrlCallback)
 	};
 	
 	return {
